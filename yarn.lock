@@ -3391,6 +3391,7 @@ __metadata:
     prettier: "npm:2.8.8"
     react: "npm:19.2.3"
     react-native: "npm:0.87.1"
+    react-native-permissions: "npm:^5.6.2"
     react-native-safe-area-context: "npm:^5.5.2"
     react-test-renderer: "npm:19.2.3"
     typescript: "npm:^6.0.3"
@@ -8026,6 +8027,20 @@ __metadata:
   version: 19.3.0
   resolution: "react-is@npm:19.3.0"
   checksum: 10c0/99b16fc1009222ec0bbe05286566c865908430778ea6ba90dd418c7a11594c6cbb8db58432735b9203e3c6463e3eef5a399df1317ee2d75fd96b3a88cfaa662e
+  languageName: node
+  linkType: hard
+
+"react-native-permissions@npm:^5.6.2":
+  version: 5.6.2
+  resolution: "react-native-permissions@npm:5.6.2"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-windows: "*"
+  peerDependenciesMeta:
+    react-native-windows:
+      optional: true
+  checksum: 10c0/af2a27a76fe3a866b8e33b1f5b049965110fc0f840df71c02422b2b4be3abc3f70c8ef4af6c97137098913f9c62bd07274202a5da76f6f73a746071e67a87c3f
   languageName: node
   linkType: hard
 

@@ -1,4 +1,4 @@
-package com.dialogloop
+package com.DialogLoop
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -1,4 +1,4 @@
-package com.dialogloop
+package com.DialogLoop
 
 import android.app.Application
 import com.facebook.react.PackageList
