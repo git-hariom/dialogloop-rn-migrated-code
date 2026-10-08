@@ -14,7 +14,7 @@ node_require('react-native-permissions/scripts/setup.rb')
 
 use_modular_headers!
 
-platform :ios, min_ios_version_supported
+platform :ios, '15.5'
 prepare_react_native_project!
 
 # react-native-permissions

@@ -11,7 +11,7 @@ function useDeviceInfo() {
                 deviceName: await DeviceInfo.getDeviceName(),
                 systemName: DeviceInfo.getSystemName(),
                 systemVersion: DeviceInfo.getSystemVersion(),
-                uniqueId: DeviceInfo.getUniqueId(),
+                nativeId: await DeviceInfo.getUniqueId(),
                 manufacturer: await DeviceInfo.getManufacturer(),
                 model: DeviceInfo.getModel(),
                 brand: DeviceInfo.getBrand(),
@@ -30,7 +30,9 @@ function useDeviceInfo() {
                 isBatteryCharging: await DeviceInfo.isBatteryCharging(),
                 batteryLevel: await DeviceInfo.getBatteryLevel(),
                 isLocationEnabled: await DeviceInfo.isLocationEnabled(),
+                nativeVer: await DeviceInfo.getVersion(),
             };
+
             setDeviceInfo(info);
         };
 

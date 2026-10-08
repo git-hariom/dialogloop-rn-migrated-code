@@ -2,5 +2,9 @@ export default {
     FIRST_LAUNCH_URL: 'https://app.dialogloop.com/v3/rd110/native/firstlaunch.html',
     GET_DEVICE_INFO: "GET_DEVICE_INFO",
     LAUNCH_QR_CODE_READER: "LAUNCH_QR_CODE_READER",
-    OPEN_EXTERNAL: "OPEN_EXTERNAL"
+    OPEN_EXTERNAL: "OPEN_EXTERNAL",
+    LAUNCH_QRCODE_READER: "LAUNCH_QRCODE_READER",
+    NATIVEAPP_POWER_STATE_CHANGE: "NATIVEAPP_POWER_STATE_CHANGE",
+    NATIVEAPP_STATE_CHANGE: "NATIVEAPP_STATE_CHANGE",
+    NO_INTERNET: "No internet connection. Please check your network settings.",
 }
