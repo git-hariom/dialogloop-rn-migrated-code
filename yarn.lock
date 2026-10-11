@@ -3504,6 +3504,7 @@ __metadata:
     react-native: "npm:0.87.1"
     react-native-device-info: "npm:15.0.2"
     react-native-inappbrowser-reborn: "npm:^3.7.1"
+    react-native-localize: "npm:^3.7.2"
     react-native-nitro-image: "npm:^0.15.2"
     react-native-nitro-modules: "npm:^0.37.1"
     react-native-permissions: "npm:5.6.2"
@@ -8222,6 +8223,20 @@ __metadata:
   peerDependencies:
     react-native: ">=0.56"
   checksum: 10c0/eb5560b9ee8ffba05f28d09b356076b5533a19fd115b2d35c55877e8dfe388666e2ab38b6224e1cdec8ab9db0d2f64c646b33ba20808e2ef31b7ef647644f129
+  languageName: node
+  linkType: hard
+
+"react-native-localize@npm:^3.7.2":
+  version: 3.7.2
+  resolution: "react-native-localize@npm:3.7.2"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-macos: "*"
+  peerDependenciesMeta:
+    react-native-macos:
+      optional: true
+  checksum: 10c0/93c415fdf27096517c791cd24bebf7f6a764e5ab5c6d2f628cfe9be2b3a69e8dfd30f35aae8a36e4631933273eb8c6baec47f1befcafafcceb9f5423762f01c8
   languageName: node
   linkType: hard
 

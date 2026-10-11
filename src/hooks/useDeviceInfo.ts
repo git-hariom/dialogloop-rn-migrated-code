@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import DeviceInfo from "react-native-device-info";
+import { getLocales } from 'react-native-localize';
 
 function useDeviceInfo() {
     const [deviceInfo, setDeviceInfo] = useState<any>(null);
@@ -31,6 +32,7 @@ function useDeviceInfo() {
                 batteryLevel: await DeviceInfo.getBatteryLevel(),
                 isLocationEnabled: await DeviceInfo.isLocationEnabled(),
                 nativeVer: await DeviceInfo.getVersion(),
+                locales: await getLocales(),
             };
 
             setDeviceInfo(info);

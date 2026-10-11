@@ -7,4 +7,5 @@ export default {
     NATIVEAPP_POWER_STATE_CHANGE: "NATIVEAPP_POWER_STATE_CHANGE",
     NATIVEAPP_STATE_CHANGE: "NATIVEAPP_STATE_CHANGE",
     NO_INTERNET: "No internet connection. Please check your network settings.",
+    REQUEST_PERMISSIONS: "REQUEST_PERMISSIONS",
 }

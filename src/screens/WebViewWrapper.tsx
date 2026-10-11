@@ -9,7 +9,7 @@ import { View, Text } from 'react-native';
 import { AppStackParamList } from '../navigation/AppNavigator';
 import CONSTANTS from '../constants';
 import useDeviceInfo from '../hooks/useDeviceInfo';
-import { getNavigateURLParams, openExternal } from '../utils/helper';
+import { getNavigateURLParams, openExternal, requestPermission, requestPermissions } from '../utils/helper';
 import QRScanner from '../components/QRScanner';
 import useGetAppState from '../hooks/useGetAppState';
 import useDeviceBatteryStateChange from '../hooks/useDeviceBatteryStateChange';
@@ -26,10 +26,12 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         useDeviceBatteryStateChange();
     const [isWebviewloading, setIsWebViewLoading] = useState(true);
     const hasLoadedOnce = useRef(false);
+    const [langStrings, setLangStrings] = useState({});
 
     const firstLaunchURL =
         CONSTANTS?.FIRST_LAUNCH_URL +
         getNavigateURLParams(CONSTANTS?.FIRST_LAUNCH_URL, deviceInfo);
+    console.log('LOG_FIRST_LAUNCH_URL', firstLaunchURL);
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener((state) => {
@@ -160,6 +162,7 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         webViewRef.current.injectJavaScript(script);
     };
 
+
     const handleMessage = async (event: any) => {
         let response: any;
         try {
@@ -184,7 +187,12 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         }
 
         if (response?.message?.id === CONSTANTS?.LAUNCH_QRCODE_READER) {
+            setLangStrings(response?.message?.langStrings || {});
             setShowQRScanner(true);
+        }
+
+        if (response?.message?.id === CONSTANTS?.REQUEST_PERMISSIONS) {
+            await requestPermissions(response?.message?.permissions || []);
         }
     };
 
@@ -225,6 +233,7 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
                     onBarcodeScanned={onBarcodeScanned}
                     onClose={() => setShowQRScanner(false)}
                     visible={true}
+                    langStrings={langStrings}
                 />
             )}
 

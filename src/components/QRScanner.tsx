@@ -19,12 +19,14 @@ type QRScannerProps = {
   onBarcodeScanned: (barcodes: any[]) => void;
   onClose: () => void;
   visible?: boolean;
+  langStrings: any;
 };
 
 const QRScanner = ({
   onBarcodeScanned,
   onClose,
   visible,
+  langStrings,
 }: QRScannerProps) => {
   const {
     hasPermission,
@@ -52,21 +54,23 @@ const QRScanner = ({
         onRequestClose={onClose}>
         <View style={styles.center}>
           <Text style={styles.message}>
-            DialogLoop needs camera access to scan QR codes.
+            {langStrings?.CAMERA_PERMISSION_MESSAGE || 'Camera permission is required to scan QR codes.'}
           </Text>
 
           <TouchableOpacity
             style={styles.button}
             onPress={handleRequestPermission}>
             <Text style={styles.buttonText}>
-              Allow Camera
+              {langStrings?.REQUEST_PERMISSION || 'Request Permission'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.closeButton}
             onPress={onClose}>
-            <Text>Close</Text>
+            <Text>
+              {langStrings?.CLOSE || 'Close'}
+            </Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -81,7 +85,7 @@ const QRScanner = ({
         onRequestClose={onClose}>
         <View style={styles.center}>
           <Text style={styles.message}>
-            Initializing camera...
+            {langStrings?.CAMERA_NOT_AVAILABLE || 'Camera is not available on this device.'}
           </Text>
         </View>
       </Modal>
@@ -96,11 +100,13 @@ const QRScanner = ({
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>
-            Scan QR Code to continue
+            {langStrings?.SCAN_QR_CODE_MESSAGE || 'Scan QR Code to continue'}
           </Text>
 
           <TouchableOpacity onPress={onClose}>
-            <Text style={styles.close}>Close</Text>
+            <Text style={styles.close}>
+              {langStrings?.CLOSE || 'Close'}
+            </Text>
           </TouchableOpacity>
         </View>
 
