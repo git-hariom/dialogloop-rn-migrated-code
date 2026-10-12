@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import {
+  Image,
   Linking,
   Modal,
   StyleSheet,
@@ -39,56 +40,22 @@ const QRScanner = ({
     try {
       const granted = await requestPermission();
       if (!granted) {
-        await Linking.openSettings();
+        Linking.openSettings();
       }
     } catch (error) {
       console.error('Permission request error:', error);
     }
   };
 
-  if (!hasPermission) {
-    return (
-      <Modal
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={onClose}>
-        <View style={styles.center}>
-          <Text style={styles.message}>
-            {langStrings?.CAMERA_PERMISSION_MESSAGE || 'Camera permission is required to scan QR codes.'}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleRequestPermission}>
-            <Text style={styles.buttonText}>
-              {langStrings?.REQUEST_PERMISSION || 'Request Permission'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}>
-            <Text>
-              {langStrings?.CLOSE || 'Close'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-    );
-  }
+  useEffect(() => {
+    if (device && visible && !hasPermission) {
+      handleRequestPermission();
+    }
+  }, [device, hasPermission, visible]);
 
   if (!device) {
     return (
-      <Modal
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={onClose}>
-        <View style={styles.center}>
-          <Text style={styles.message}>
-            {langStrings?.CAMERA_NOT_AVAILABLE || 'Camera is not available on this device.'}
-          </Text>
-        </View>
-      </Modal>
+      <></>
     );
   }
 
@@ -104,9 +71,11 @@ const QRScanner = ({
           </Text>
 
           <TouchableOpacity onPress={onClose}>
-            <Text style={styles.close}>
-              {langStrings?.CLOSE || 'Close'}
-            </Text>
+            <Image
+                    source={require('../../assets/images/close.png')}
+                    style={{ width: 20, height: 20 }}
+                    resizeMode="contain"
+                />
           </TouchableOpacity>
         </View>
 
@@ -147,7 +116,8 @@ const styles = StyleSheet.create({
   },
 
   close: {
-    fontSize: 16,
+    fontSize: 28,
+    fontWeight: '700',
   },
 
   cameraContainer: {

@@ -1,9 +1,11 @@
 import {useEffect, useState} from "react";
 import DeviceInfo from "react-native-device-info";
 import { getLocales } from 'react-native-localize';
+import useGetPermissionState from "./useGetPermissionState";
 
 function useDeviceInfo() {
     const [deviceInfo, setDeviceInfo] = useState<any>(null);
+    const permissionStates = useGetPermissionState();
 
     useEffect(() => {
         const getDeviceInfo = async () => {
@@ -26,13 +28,16 @@ function useDeviceInfo() {
                 isTablet: DeviceInfo.isTablet(),
                 isPinOrFingerprintSet: await DeviceInfo.isPinOrFingerprintSet(),
                 hasNotch: DeviceInfo.hasNotch(),
-                isLandscape: DeviceInfo.isLandscape(),
+                isLandscape: await DeviceInfo.isLandscape(),
                 isAirplaneMode: await DeviceInfo.isAirplaneMode(),
                 isBatteryCharging: await DeviceInfo.isBatteryCharging(),
-                batteryLevel: await DeviceInfo.getBatteryLevel(),
                 isLocationEnabled: await DeviceInfo.isLocationEnabled(),
                 nativeVer: await DeviceInfo.getVersion(),
                 locales: await getLocales(),
+                permissions: permissionStates,
+                batteryState: (await DeviceInfo.getPowerState()).batteryState,
+                batteryLevel: (await DeviceInfo.getPowerState()).batteryLevel,
+                batteryLowPowerMode: (await DeviceInfo.getPowerState()).lowPowerMode,
             };
 
             setDeviceInfo(info);

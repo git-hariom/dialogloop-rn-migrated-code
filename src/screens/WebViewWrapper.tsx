@@ -1,37 +1,50 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import type { WebView as WebViewType } from "react-native-webview";
 import NetInfo from "@react-native-community/netinfo";
-import { View, Text } from 'react-native';
+import { View, Text, Image } from 'react-native';
 
 import { AppStackParamList } from '../navigation/AppNavigator';
 import CONSTANTS from '../constants';
-import useDeviceInfo from '../hooks/useDeviceInfo';
-import { getNavigateURLParams, openExternal, requestPermission, requestPermissions } from '../utils/helper';
+import { openExternal, requestNotificationsPermission } from '../utils/helper';
 import QRScanner from '../components/QRScanner';
+
 import useGetAppState from '../hooks/useGetAppState';
-import useDeviceBatteryStateChange from '../hooks/useDeviceBatteryStateChange';
+import useGetFirstLaunchURL from '../hooks/useGetFirstLaunchURL';
+import useDeviceInfo from '../hooks/useDeviceInfo';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'WebViewWrapper'>;
 
-const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
-    const webViewRef = useRef<WebViewType>(null);
-    const deviceInfo = useDeviceInfo();
-    const [showQRScanner, setShowQRScanner] = useState(false);
-    const [isInternet, setInternet] = useState(true);
-    const appState = useGetAppState();
-    const { batteryLevel, batteryState, lowPowerMode } =
-        useDeviceBatteryStateChange();
-    const [isWebviewloading, setIsWebViewLoading] = useState(true);
-    const hasLoadedOnce = useRef(false);
-    const [langStrings, setLangStrings] = useState({});
+const injectedJS = `
+    (function() {
+    // Override window.open
+    window.open = function(url, target) {
+        window.ReactNativeWebView.postMessage(
+        JSON.stringify({
+            type: "OPEN_EXTERNAL",
+            url: url,
+            target: target || '_blank'
+        })
+        );
+        return null;
+    };
+    })();
+    true;
+`;
 
-    const firstLaunchURL =
-        CONSTANTS?.FIRST_LAUNCH_URL +
-        getNavigateURLParams(CONSTANTS?.FIRST_LAUNCH_URL, deviceInfo);
-    console.log('LOG_FIRST_LAUNCH_URL', firstLaunchURL);
+const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
+    const [showQRScanner, setShowQRScanner] = useState(false);
+    const [langStrings, setLangStrings] = useState({});
+    const [isInternet, setInternet] = useState(true);
+    const [isWebviewloading, setIsWebViewLoading] = useState(true);
+
+    const webViewRef = useRef<WebViewType>(null);
+    const hasLoadedOnce = useRef(false);
+
+    const appState = useGetAppState();
+    const firstLaunchURL = useGetFirstLaunchURL();
+    const deviceInfo = useDeviceInfo();
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener((state) => {
@@ -51,51 +64,15 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         handleAppStateChange(appState);
     }, [appState]);
 
-    useEffect(() => {
-        if (batteryLevel == null) return;
-
-        const payload = JSON.stringify({
-            batteryLevel,
-            batteryState,
-            lowPowerMode,
-        });
-
-        webViewRef.current?.injectJavaScript(`
-    window.dispatchEvent(new CustomEvent('${CONSTANTS.NATIVEAPP_POWER_STATE_CHANGE
-            }', {
-      data: ${payload},
-      timestamp: ${Date.now()}
-    }));
-    true;
-  `);
-    }, [batteryLevel, batteryState, lowPowerMode]);
-
-    const injectedJS = `
-        (function() {
-        // Override window.open
-        window.open = function(url, target) {
-            window.ReactNativeWebView.postMessage(
-            JSON.stringify({
-                type: "OPEN_EXTERNAL",
-                url: url,
-                target: target || '_blank'
-            })
-            );
-            return null;
-        };
-        })();
-        true;
-    `;
-
     const handleAppStateChange = (state: string) => {
         const script = `
-    window.dispatchEvent(new CustomEvent('${CONSTANTS.NATIVEAPP_STATE_CHANGE
+            window.dispatchEvent(new CustomEvent('${CONSTANTS.NATIVEAPP_STATE_CHANGE
             }', {
-      data: { state: '${state}' },
-      timestamp: ${Date.now()}
-    }));
-    true;
-  `;
+            data: { state: '${state}' },
+            timestamp: ${Date.now()}
+            }));
+            true;
+        `;
 
         webViewRef.current?.injectJavaScript(script);
     };
@@ -133,11 +110,11 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         setShowQRScanner(false);
 
         setTimeout(() => {
-            sendMessageToWebView(response);
+            sendQRCodeResponse(response);
         }, 500);
     };
 
-    const sendMessageToWebView = (message: any) => {
+    const sendQRCodeResponse = (message: any) => {
         if (!webViewRef.current) {
             console.log('LOG_WEBVIEW_REF_NOT_AVAILABLE');
             return;
@@ -163,7 +140,7 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
     };
 
 
-    const handleMessage = async (event: any) => {
+    const handlePostMessage = async (event: any) => {
         let response: any;
         try {
             response = JSON.parse(event.nativeEvent.data);
@@ -187,30 +164,58 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         }
 
         if (response?.message?.id === CONSTANTS?.LAUNCH_QRCODE_READER) {
-            setLangStrings(response?.message?.langStrings || {});
+            setLangStrings(response?.message?.strings || {});
             setShowQRScanner(true);
         }
 
-        if (response?.message?.id === CONSTANTS?.REQUEST_PERMISSIONS) {
-            await requestPermissions(response?.message?.permissions || []);
+        if (response?.message?.id === CONSTANTS?.REQUEST_NOTIFICATIONS_PERMISSION) {
+            await requestNotificationsPermission();
         }
     };
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
             {!isInternet && (
-                <View style={{ justifyContent: 'center', alignItems: 'center', height: 50, backgroundColor: 'red' }}>
-                    <Text style={{ color: 'white' }}>{CONSTANTS?.NO_INTERNET}</Text>
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 8,
+                        alignSelf: 'center',
+                        height: 36,
+                        minWidth: 180,
+                        paddingHorizontal: 16,
+                        borderRadius: 20,
+                        backgroundColor: '#c54e4e',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                        elevation: 10,
+                    }}
+                >
+                    <Text
+                        style={{
+                            color: 'white',
+                            fontSize: 16,
+                            fontWeight: '600',
+                        }}
+                    >
+                        {'⊘  '}{CONSTANTS?.NO_INTERNET}
+                    </Text>
                 </View>
             )}
             {isWebviewloading && <View style={{ height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                <Text>Loading...</Text>
+                <Image
+                    source={require('../../assets/images/app-logo.png')}
+                    style={{ width: 200, height: 200 }}
+                    resizeMode="contain"
+                />
             </View>}
             <WebView
                 ref={webViewRef}
                 source={{ uri: firstLaunchURL }}
                 style={{ flex: 1 }}
-                onMessage={handleMessage}
+                onMessage={handlePostMessage}
                 javaScriptEnabled={true}
                 allowsInlineMediaPlayback={true}
                 mediaPlaybackRequiresUserAction={false}
@@ -237,7 +242,7 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
                 />
             )}
 
-        </SafeAreaView>
+        </View>
     );
 };
 
