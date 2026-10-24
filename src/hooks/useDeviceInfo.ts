@@ -1,11 +1,16 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import DeviceInfo from "react-native-device-info";
 import { getLocales } from 'react-native-localize';
 import useGetPermissionState from "./useGetPermissionState";
+import useGetFCMToken from "./useGetFCMToken";
 
 function useDeviceInfo() {
     const [deviceInfo, setDeviceInfo] = useState<any>(null);
     const permissionStates = useGetPermissionState();
+    const tokens = useGetFCMToken();
+
+    console.log('LOG_FCM_TOKEN:', tokens?.fcmToken);
+    console.log('LOG_APN_TOKEN:', tokens?.apnToken);
 
     useEffect(() => {
         const getDeviceInfo = async () => {
@@ -35,6 +40,7 @@ function useDeviceInfo() {
                 nativeVer: await DeviceInfo.getVersion(),
                 locales: await getLocales(),
                 permissions: permissionStates,
+                fcmToken: tokens?.fcmToken || 'NOT_AVAILABLE',
                 batteryState: (await DeviceInfo.getPowerState()).batteryState,
                 batteryLevel: (await DeviceInfo.getPowerState()).batteryLevel,
                 batteryLowPowerMode: (await DeviceInfo.getPowerState()).lowPowerMode,

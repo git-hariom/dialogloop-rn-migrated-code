@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "926033444596",
-    "project_id": "dialogloop-playground",
-    "storage_bucket": "dialogloop-playground.firebasestorage.app"
+    "project_number": "665198248136",
+    "project_id": "dialogloop-native-app",
+    "storage_bucket": "dialogloop-native-app.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:926033444596:android:f753aad17de48d554b68a1",
+        "mobilesdk_app_id": "1:665198248136:android:5e14a0a594889e6d3725fd",
         "android_client_info": {
           "package_name": "com.DialogLoop"
         }
@@ -15,45 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCT2f3xsgNAKwS8rqADXKLSRvPObmNUQL0"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:926033444596:android:4b76be66adacf35b4b68a1",
-        "android_client_info": {
-          "package_name": "com.dialogloop"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCT2f3xsgNAKwS8rqADXKLSRvPObmNUQL0"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:926033444596:android:0ae1a616eece330a4b68a1",
-        "android_client_info": {
-          "package_name": "com.fcmtest"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCT2f3xsgNAKwS8rqADXKLSRvPObmNUQL0"
+          "current_key": "AIzaSyBT7BkVifzH-iqCF1PeNM4mntWK8iW5dvg"
         }
       ],
       "services": {

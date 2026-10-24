@@ -39,9 +39,3 @@ export const openExternal = async (url: string) => {
     }, 300);
   }
 };
-
-export const requestNotificationsPermission = async () => {
-  return new Promise((resolve) => {
-    resolve(true);
-  });
-}

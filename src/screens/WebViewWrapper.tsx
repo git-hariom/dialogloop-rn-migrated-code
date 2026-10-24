@@ -7,12 +7,14 @@ import { View, Text, Image } from 'react-native';
 
 import { AppStackParamList } from '../navigation/AppNavigator';
 import CONSTANTS from '../constants';
-import { openExternal, requestNotificationsPermission } from '../utils/helper';
+import { openExternal } from '../utils/helper';
 import QRScanner from '../components/QRScanner';
 
 import useGetAppState from '../hooks/useGetAppState';
 import useGetFirstLaunchURL from '../hooks/useGetFirstLaunchURL';
 import useDeviceInfo from '../hooks/useDeviceInfo';
+import useGetNotificationPermission from '../hooks/useGetNotificationPermission';
+import useGetFCMToken from '../hooks/useGetFCMToken';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'WebViewWrapper'>;
 
@@ -110,34 +112,24 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         setShowQRScanner(false);
 
         setTimeout(() => {
-            sendQRCodeResponse(response);
+            sendataToWebView(response);
         }, 500);
     };
 
-    const sendQRCodeResponse = (message: any) => {
+    const sendataToWebView = async(message: any) => {
         if (!webViewRef.current) {
             console.log('LOG_WEBVIEW_REF_NOT_AVAILABLE');
             return;
         }
 
-        const payload = JSON.stringify(message);
-
         const script = `
-        (function() {
-            try {
-                window.postMessage(${payload}, "*");
-                console.log("Native -> Web QR message sent");
-            } catch (e) {
-                console.error("Native -> Web QR message failed", e);
-            }
-        })();
-        true;
-    `;
-
-        console.log('LOG_INJECTING_JS_TO_WEBVIEW', message);
-
+                (function() {
+                    window.postMessage(${JSON.stringify(message)}, "*");
+                })();
+                true;
+            `;
         webViewRef.current.injectJavaScript(script);
-    };
+    }
 
 
     const handlePostMessage = async (event: any) => {
@@ -149,14 +141,7 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         }
 
         if (response?.message?.id === CONSTANTS.GET_DEVICE_INFO) {
-            const script = `
-                (function() {
-                    window.postMessage(${JSON.stringify(deviceInfo)}, "*");
-                })();
-                true;
-            `;
-
-            webViewRef.current?.injectJavaScript(script);
+            await sendataToWebView({ id: CONSTANTS.GET_DEVICE_INFO, deviceInfo });
         }
 
         if (response.type === "OPEN_EXTERNAL") {
@@ -169,7 +154,13 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         }
 
         if (response?.message?.id === CONSTANTS?.REQUEST_NOTIFICATIONS_PERMISSION) {
-            await requestNotificationsPermission();
+            const granted = await useGetNotificationPermission();
+            const tokens =  useGetFCMToken();    
+
+            if(granted && tokens?.fcmToken) {
+                await sendataToWebView({ id: CONSTANTS.GET_DEVICE_INFO, deviceInfo });
+            }
+
         }
     };
 

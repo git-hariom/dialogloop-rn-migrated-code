@@ -1,24 +1,24 @@
 import CONSTANTS from "../constants";
 import { hasQueryParams } from "../utils/helper";
 import useDeviceInfo from "./useDeviceInfo";
-import useGetPermissionState from "./useGetPermissionState";
 
 const getNavigateURLParams = (navigateTo: string, deviceInfo: object) => {
-  const queryParamsSymbol = hasQueryParams(navigateTo) ? '&' : '?';
-  const nativeId = deviceInfo?.nativeId;
-  const nativeVer = deviceInfo?.nativeVer;
-  const locale = deviceInfo?.locales?.[0]?.languageTag || 'NOT_AVAILABLE';
-  const language = deviceInfo?.locales?.[0]?.languageCode || 'NOT_AVAILABLE';
-  const timeStamp = Math.floor(Date.now() / 1000);
+    const queryParamsSymbol = hasQueryParams(navigateTo) ? '&' : '?';
+    const nativeId = deviceInfo?.nativeId;
+    const nativeVer = deviceInfo?.nativeVer;
+    const locale = deviceInfo?.locales?.[0]?.languageTag || 'NOT_AVAILABLE';
+    const language = deviceInfo?.locales?.[0]?.languageCode || 'NOT_AVAILABLE';
+    const fcmToken = deviceInfo?.fcmToken || 'NOT_AVAILABLE';
+    const timeStamp = Math.floor(Date.now() / 1000);
 
-  const navigateURLParams: string = `${queryParamsSymbol}&nativeId=${nativeId}&nativeVer=${nativeVer}&locale=${locale}&language=${language}&_ts=${timeStamp}`;
+    const navigateURLParams: string = `${queryParamsSymbol}&nativeId=${nativeId}&nativeVer=${nativeVer}&locale=${locale}&language=${language}&fcmToken=${fcmToken}&_ts=${timeStamp}`;
 
-  return navigateURLParams;
+    return navigateURLParams;
 }
 
 const useGetFirstLaunchURL = () => {
     const deviceInfo = useDeviceInfo();
-    
+
     const firstLaunchURL =
         CONSTANTS?.FIRST_LAUNCH_URL +
         getNavigateURLParams(CONSTANTS?.FIRST_LAUNCH_URL, deviceInfo);

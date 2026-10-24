@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Image,
-  Linking,
   Modal,
   StyleSheet,
   Text,
@@ -11,10 +10,10 @@ import {
 
 import {
   useCameraDevice,
-  useCameraPermission,
 } from 'react-native-vision-camera';
 
 import { CodeScanner } from 'react-native-vision-camera-barcode-scanner';
+import useGetPermissionState from '../hooks/useGetPermissionState';
 
 type QRScannerProps = {
   onBarcodeScanned: (barcodes: any[]) => void;
@@ -29,31 +28,10 @@ const QRScanner = ({
   visible,
   langStrings,
 }: QRScannerProps) => {
-  const {
-    hasPermission,
-    requestPermission,
-  } = useCameraPermission();
-
   const device = useCameraDevice('back');
+  const permission = useGetPermissionState()
 
-  const handleRequestPermission = async () => {
-    try {
-      const granted = await requestPermission();
-      if (!granted) {
-        Linking.openSettings();
-      }
-    } catch (error) {
-      console.error('Permission request error:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (device && visible && !hasPermission) {
-      handleRequestPermission();
-    }
-  }, [device, hasPermission, visible]);
-
-  if (!device) {
+  if (!device || !permission?.notification) {
     return (
       <></>
     );
