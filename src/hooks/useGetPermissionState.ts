@@ -1,28 +1,67 @@
-import { useState } from "react";
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCameraPermission } from 'react-native-vision-camera';
 import {
-    useCameraPermission,
-} from 'react-native-vision-camera';
-import {
-    checkNotifications,
-    RESULTS
+  checkNotifications,
+  RESULTS,
 } from 'react-native-permissions';
-import CONSTANTS from "../constants";
+import CONSTANTS from '../constants';
 
-const useGetPermissionState = async() => {
+const useGetPermissionState = () => {
+  const { hasPermission: hasCameraPermission } = useCameraPermission();
+
+  const [notificationStatus, setNotificationStatus] = useState<string | null>(
+    null,
+  );
+
+  const refreshPermissionState = useCallback(async () => {
     try {
-        const { hasPermission } = useCameraPermission();
-        let { status } = await checkNotifications();
+      const { status } = await checkNotifications();
 
-        console.log('LOG_PermissionStatus:', { camera: hasPermission, notification: status });
-        return {
-            camera: hasPermission ? CONSTANTS?.GRANTED : CONSTANTS?.DENIED,
-            notification: status === RESULTS.GRANTED ? CONSTANTS?.GRANTED : CONSTANTS?.DENIED,
-        }
-    }
-    catch (error) {
-        console.error('LOG_Error checking permissions:', error);
-    }
+      console.log('LOG_notification_status', status);
 
-}
+      setNotificationStatus(previous =>
+        previous === status ? previous : status,
+      );
+
+      return {
+        camera: hasCameraPermission
+          ? CONSTANTS.GRANTED
+          : CONSTANTS.DENIED,
+        notification:
+          status === RESULTS.GRANTED
+            ? CONSTANTS.GRANTED
+            : CONSTANTS.DENIED,
+      };
+    } catch (error) {
+      console.error('LOG_Error checking permissions:', error);
+      return null;
+    }
+  }, [hasCameraPermission]);
+
+  useEffect(() => {
+    refreshPermissionState();
+  }, [refreshPermissionState]);
+
+  const permissionStates = useMemo(
+    () => ({
+      camera: hasCameraPermission
+        ? CONSTANTS.GRANTED
+        : CONSTANTS.DENIED,
+      notification:
+        notificationStatus === null
+          ? null
+          : notificationStatus === RESULTS.GRANTED
+            ? CONSTANTS.GRANTED
+            : CONSTANTS.DENIED,
+    }),
+    [hasCameraPermission, notificationStatus],
+  );
+
+  return {
+    permissionStates,
+    refreshPermissionState,
+  };
+};
 
 export default useGetPermissionState;

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
+  Linking,
   Modal,
   StyleSheet,
   Text,
@@ -10,10 +11,10 @@ import {
 
 import {
   useCameraDevice,
+  useCameraPermission,
 } from 'react-native-vision-camera';
 
 import { CodeScanner } from 'react-native-vision-camera-barcode-scanner';
-import useGetPermissionState from '../hooks/useGetPermissionState';
 
 type QRScannerProps = {
   onBarcodeScanned: (barcodes: any[]) => void;
@@ -29,9 +30,28 @@ const QRScanner = ({
   langStrings,
 }: QRScannerProps) => {
   const device = useCameraDevice('back');
-  const permission = useGetPermissionState()
+  const {
+    hasPermission,
+    requestPermission,
+  } = useCameraPermission();
 
-  if (!device || !permission?.notification) {
+  useEffect(() => {
+    const getCameraPermission = async () => {
+      try {
+        const granted = await requestPermission();
+        if (!granted) {
+          Linking.openSettings();
+        }
+        
+      } catch (error) {
+        console.error('Permission request error:', error);
+        return false;
+      }
+    }
+    if(!hasPermission) getCameraPermission();
+  }, []);
+
+  if (!device || !hasPermission) {
     return (
       <></>
     );
@@ -50,10 +70,10 @@ const QRScanner = ({
 
           <TouchableOpacity onPress={onClose}>
             <Image
-                    source={require('../../assets/images/close.png')}
-                    style={{ width: 20, height: 20 }}
-                    resizeMode="contain"
-                />
+              source={require('../../assets/images/close.png')}
+              style={{ width: 20, height: 20 }}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
         </View>
 

@@ -16,9 +16,7 @@ const getNavigateURLParams = (navigateTo: string, deviceInfo: object) => {
     return navigateURLParams;
 }
 
-const useGetFirstLaunchURL = () => {
-    const deviceInfo = useDeviceInfo();
-
+const useGetFirstLaunchURL = (deviceInfo: any) => {
     const firstLaunchURL =
         CONSTANTS?.FIRST_LAUNCH_URL +
         getNavigateURLParams(CONSTANTS?.FIRST_LAUNCH_URL, deviceInfo);

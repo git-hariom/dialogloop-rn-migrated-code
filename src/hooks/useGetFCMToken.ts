@@ -1,79 +1,106 @@
-import { useState, useEffect } from 'react';
-import {
-    checkNotifications,
-    requestNotifications,
-    RESULTS,
-} from 'react-native-permissions';
-import {
-    getMessaging,
-    getToken,
-    getAPNSToken,
-    registerDeviceForRemoteMessages,
-} from '@react-native-firebase/messaging';
-import useGetPermissionState from './useGetPermissionState';
+
+import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
+import {
+  getMessaging,
+  getToken,
+  getAPNSToken,
+  registerDeviceForRemoteMessages,
+} from '@react-native-firebase/messaging';
+
+import useGetPermissionState from './useGetPermissionState';
+import CONSTANTS from '../constants';
 
 const useGetFCMToken = () => {
-    const [fcmToken, setFcmToken] = useState<string | null>(null);
-    const [apnToken, setApnToken] = useState<string | null>(null);
-    const [hasNotificationPermission, setHasNotificationPermission] = useState<boolean>(false);
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+  const [apnToken, setApnToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-    useGetPermissionState().then((PermissionStatus) => {
-        console.log('LOG_PermissionStatus:', PermissionStatus);
-        if (PermissionStatus?.notification === 0) {
-            console.log('LOG_Notification permission is denied.');
-            setHasNotificationPermission(false);
+  const {
+    permissionStates,
+    refreshPermissionState,
+  } = useGetPermissionState();
 
-            // Temp Code -- Dinesh will ask for Permission in the WebView, so we will not request permission here.
-            requestNotifications(['alert', 'sound', 'badge']).then(({ status, settings }) => {
-                if (status === RESULTS.GRANTED) {
-                    console.log('LOG_Notification permission granted.');
-                    setHasNotificationPermission(true);
-                } else {
-                    console.log('LOG_Notification permission denied.');
-                    setHasNotificationPermission(false);
-                }
-            });
+  const getFCMToken = useCallback(async () => {
+    try {
+      const messaging = getMessaging();
+
+      if (Platform.OS === 'ios') {
+        await registerDeviceForRemoteMessages(messaging);
+
+        const latestAPNSToken = await getAPNSToken(messaging);
+        console.log('LOG_APN_TOKEN:', latestAPNSToken);
+
+        if (!latestAPNSToken) {
+          setApnToken(null);
+          setFcmToken(null);
+          return null;
         }
-        setHasNotificationPermission(PermissionStatus?.notification === 1);
-    });
 
-    useEffect(() => {
-        const getFCMToken = async () => {
-            try {
-                // 3. Get Firebase Messaging instance
-                const messaging = getMessaging();
+        const latestFCMToken = await getToken(messaging);
 
-                // 4. Register for remote messages
-                await registerDeviceForRemoteMessages(messaging);
-                let apnsToken = null;
+        setApnToken(latestAPNSToken);
+        setFcmToken(latestFCMToken);
 
-                // 5. Get APNs token (iOS)
-                if (Platform.OS === 'ios') {
-                    apnsToken = await getAPNSToken(messaging);
+        console.log('LOG_FCM_TOKEN:', latestFCMToken);
 
-                    console.log('LOG_APN_TOKEN: APNs Token:', apnsToken);
-
-                    if (!apnsToken) {
-                        console.log('LOG_APN_TOKEN: APNs token is null or undefined');
-                        return;
-                    }
-                }
-
-                const fcmToken = await getToken(messaging);
-                console.log('LOG_FCM_TOKEN: FCM Token:', fcmToken);
-
-                setFcmToken(fcmToken);
-                setApnToken(apnsToken);
-            } catch (error) {
-                console.error('Error getting FCM token:', error);
-            }
+        return {
+          fcmToken: latestFCMToken,
+          apnToken: latestAPNSToken,
         };
+      }
 
-        if (hasNotificationPermission) getFCMToken();
-    }, [hasNotificationPermission]);
+      const latestFCMToken = await getToken(messaging);
 
-    return { fcmToken, apnToken };
-}
+      setFcmToken(latestFCMToken);
+      setApnToken(null);
+
+      console.log('LOG_FCM_TOKEN:', latestFCMToken);
+
+      return {
+        fcmToken: latestFCMToken,
+        apnToken: null,
+      };
+    } catch (error) {
+      console.error('Error getting FCM/APNs token:', error);
+      return null;
+    }
+  }, []);
+
+  const refreshTokens = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      // Recheck permissions before retrieving tokens.
+      const latestPermissions = await refreshPermissionState();
+
+      if (
+        !latestPermissions ||
+        latestPermissions.notification !== CONSTANTS.GRANTED
+      ) {
+        setFcmToken(null);
+        setApnToken(null);
+        return null;
+      }
+
+      return await getFCMToken();
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshPermissionState, getFCMToken]);
+
+  useEffect(() => {
+    if (permissionStates.notification === CONSTANTS.GRANTED) {
+      getFCMToken();
+    }
+  }, [permissionStates.notification, getFCMToken]);
+
+  return {
+    fcmToken,
+    apnToken,
+    refreshTokens,
+    loading,
+  };
+};
 
 export default useGetFCMToken;

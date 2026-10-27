@@ -14,7 +14,6 @@ import useGetAppState from '../hooks/useGetAppState';
 import useGetFirstLaunchURL from '../hooks/useGetFirstLaunchURL';
 import useDeviceInfo from '../hooks/useDeviceInfo';
 import useGetNotificationPermission from '../hooks/useGetNotificationPermission';
-import useGetFCMToken from '../hooks/useGetFCMToken';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'WebViewWrapper'>;
 
@@ -45,8 +44,15 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
     const hasLoadedOnce = useRef(false);
 
     const appState = useGetAppState();
-    const firstLaunchURL = useGetFirstLaunchURL();
-    const deviceInfo = useDeviceInfo();
+    const { deviceInfo, refreshDeviceInfo } = useDeviceInfo();
+    const [firstLaunchURL, setFirstLaunchURL] = useState<string | null>(null);
+    const { getNotificationPermission } = useGetNotificationPermission();
+
+    useEffect(() => {
+        if (deviceInfo && firstLaunchURL === null) {
+            setFirstLaunchURL(useGetFirstLaunchURL(deviceInfo));
+        }
+    }, [deviceInfo, firstLaunchURL]);
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener((state) => {
@@ -92,7 +98,7 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
 
         const value = barcode.rawValue;
 
-        // console.log('LOG_QR_CODE_SCANNED', value);
+        console.log('LOG_QR_CODE_SCANNED', value);
 
         const response = {
             id: 'QRCodeRes',
@@ -116,7 +122,7 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         }, 500);
     };
 
-    const sendataToWebView = async(message: any) => {
+    const sendataToWebView = async (message: any) => {
         if (!webViewRef.current) {
             console.log('LOG_WEBVIEW_REF_NOT_AVAILABLE');
             return;
@@ -141,7 +147,9 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         }
 
         if (response?.message?.id === CONSTANTS.GET_DEVICE_INFO) {
-            await sendataToWebView({ id: CONSTANTS.GET_DEVICE_INFO, deviceInfo });
+            const currentDeviceInfo = await refreshDeviceInfo();
+            console.log("LOG_currentDeviceInfo", currentDeviceInfo);
+            await sendataToWebView({ id: CONSTANTS.GET_DEVICE_INFO, currentDeviceInfo });
         }
 
         if (response.type === "OPEN_EXTERNAL") {
@@ -149,18 +157,17 @@ const WebViewWrapper: React.FC<Props> = ({ route, navigation }) => {
         }
 
         if (response?.message?.id === CONSTANTS?.LAUNCH_QRCODE_READER) {
-            setLangStrings(response?.message?.strings || {});
+            setLangStrings(response?.message?.data?.strings || {});
             setShowQRScanner(true);
         }
 
         if (response?.message?.id === CONSTANTS?.REQUEST_NOTIFICATIONS_PERMISSION) {
-            const granted = await useGetNotificationPermission();
-            const tokens =  useGetFCMToken();    
+            const latestNotificationState = await getNotificationPermission();
+            const currentDeviceInfo = await refreshDeviceInfo();
 
-            if(granted && tokens?.fcmToken) {
-                await sendataToWebView({ id: CONSTANTS.GET_DEVICE_INFO, deviceInfo });
+            if (latestNotificationState && currentDeviceInfo?.fcmToken) {
+                await sendataToWebView({ id: CONSTANTS.GET_DEVICE_INFO, currentDeviceInfo });
             }
-
         }
     };
 
